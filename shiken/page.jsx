@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useLang } from '@/lib/LangContext';
+import { useLang } from '@/lib/LangContext'；
 import NavBar from '@/components/NavBar';
 
 const QUESTIONS = [
