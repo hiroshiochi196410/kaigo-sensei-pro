@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLang } from '@/lib/LangContext';
 import { useUser } from '@/components/UserAuth';
@@ -74,7 +74,7 @@ function generateProCode(sessionId) {
   return 'PRO' + base;
 }
 
-export default function ThanksPage() {
+function ThanksPageInner() {
   const router = useRouter();
   const { lang } = useLang();
   const { loginWithCode, user } = useUser();
@@ -194,5 +194,13 @@ export default function ThanksPage() {
 
       </main>
     </div>
+  );
+}
+
+export default function ThanksPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-gray-500">読み込み中...</p></div>}>
+      <ThanksPageInner />
+    </Suspense>
   );
 }
