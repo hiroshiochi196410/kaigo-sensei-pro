@@ -6,7 +6,6 @@ import { useLang } from '@/lib/LangContext';
 import NavBar from '@/components/NavBar';
 import { useUser } from '@/components/UserAuth';
 import { convertToReadable } from '@/lib/kaigo-reading';
-import { useUser } from '@/components/UserAuth';
 
 const SCENARIOS = {
   morning:   { icon: '🌅', ja: '朝の起床介助',    en: 'Morning Care' },
