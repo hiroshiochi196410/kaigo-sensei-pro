@@ -1,294 +1,400 @@
 'use client';
+import { useState, useCallback } from 'react';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useLang } from '@/lib/LangContext';
-import NavBar from '@/components/NavBar';
-import { convertToReadable } from '@/lib/kaigo-reading';
-import { useUser } from '@/components/UserAuth';
+// 介護福祉士国家試験 出題基準に沿った全科目カテゴリ
+const CATEGORIES = [
+  {
+    id: 'ningensongen',
+    label: '人間の尊厳と自立',
+    icon: '🌸',
+    color: 'from-rose-400 to-pink-500',
+    bg: 'bg-rose-50',
+    border: 'border-rose-200',
+    text: 'text-rose-700',
+    description: '尊厳・自立・自己決定・権利擁護',
+  },
+  {
+    id: 'ningen_kankei',
+    label: '人間関係とコミュニケーション',
+    icon: '💬',
+    color: 'from-sky-400 to-blue-500',
+    bg: 'bg-sky-50',
+    border: 'border-sky-200',
+    text: 'text-sky-700',
+    description: 'コミュニケーション技術・信頼関係',
+  },
+  {
+    id: 'shakai_rikai',
+    label: '社会の理解',
+    icon: '🏛️',
+    color: 'from-violet-400 to-purple-500',
+    bg: 'bg-violet-50',
+    border: 'border-violet-200',
+    text: 'text-violet-700',
+    description: '社会保障制度・介護保険・福祉サービス',
+  },
+  {
+    id: 'kaigo_kiban',
+    label: '介護の基本',
+    icon: '🤝',
+    color: 'from-emerald-400 to-green-500',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    text: 'text-emerald-700',
+    description: '介護理念・ICF・チームケア・安全',
+  },
+  {
+    id: 'comm_gijutsu',
+    label: 'コミュニケーション技術',
+    icon: '🗣️',
+    color: 'from-amber-400 to-orange-500',
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    text: 'text-amber-700',
+    description: '面接技法・記録・報告・相談援助',
+  },
+  {
+    id: 'seikatsu_shien',
+    label: '生活支援技術',
+    icon: '🏠',
+    color: 'from-teal-400 to-cyan-500',
+    bg: 'bg-teal-50',
+    border: 'border-teal-200',
+    text: 'text-teal-700',
+    description: '食事・入浴・排泄・移動・整容・睡眠',
+  },
+  {
+    id: 'kaigo_katei',
+    label: '介護過程',
+    icon: '📋',
+    color: 'from-indigo-400 to-blue-600',
+    bg: 'bg-indigo-50',
+    border: 'border-indigo-200',
+    text: 'text-indigo-700',
+    description: 'アセスメント・計画・実施・評価',
+  },
+  {
+    id: 'hattatsu_rouka',
+    label: '発達と老化の理解',
+    icon: '🌱',
+    color: 'from-lime-400 to-green-500',
+    bg: 'bg-lime-50',
+    border: 'border-lime-200',
+    text: 'text-lime-700',
+    description: '発達段階・老化の特徴・高齢者の心理',
+  },
+  {
+    id: 'ninchisho',
+    label: '認知症の理解',
+    icon: '🧠',
+    color: 'from-fuchsia-400 to-purple-500',
+    bg: 'bg-fuchsia-50',
+    border: 'border-fuchsia-200',
+    text: 'text-fuchsia-700',
+    description: 'アルツハイマー型・BPSD・パーソンセンタードケア',
+  },
+  {
+    id: 'shougai_rikai',
+    label: '障害の理解',
+    icon: '♿',
+    color: 'from-orange-400 to-red-500',
+    bg: 'bg-orange-50',
+    border: 'border-orange-200',
+    text: 'text-orange-700',
+    description: '身体・知的・精神・発達・難病',
+  },
+  {
+    id: 'iryou_care',
+    label: 'こころとからだのしくみ',
+    icon: '💊',
+    color: 'from-red-400 to-rose-500',
+    bg: 'bg-red-50',
+    border: 'border-red-200',
+    text: 'text-red-700',
+    description: '医療的ケア・喀痰吸引・経管栄養',
+  },
+];
 
-const CATEGORIES = {
-  basic:     { icon: '🤝', ja: '介護の基本・倫理',     en: 'Basic & Ethics' },
-  body:      { icon: '💪', ja: '身体介護',              en: 'Physical Care' },
-  dementia:  { icon: '🧠', ja: '認知症ケア',            en: 'Dementia Care' },
-  meal:      { icon: '🍱', ja: '食事・栄養',            en: 'Meal & Nutrition' },
-  toilet:    { icon: '🚽', ja: '排泄介助',              en: 'Toilet Care' },
-  bath:      { icon: '🛁', ja: '入浴介助',              en: 'Bathing Care' },
-  emergency: { icon: '🚨', ja: 'ヒヤリハット・緊急時',  en: 'Emergency' },
-  record:    { icon: '📝', ja: '介護記録・申し送り',     en: 'Recording' },
-  kanji:     { icon: '📖', ja: '現場の重要漢字',        en: 'Kanji Practice' },
-  law:       { icon: '⚖️', ja: '介護保険・制度',        en: 'Law & System' },
-};
-
-const DIFFICULTIES = {
-  easy:   { ja: '基礎',   color: 'bg-green-100 text-green-700 border-green-300' },
-  medium: { ja: '標準',   color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
-  hard:   { ja: '上級',   color: 'bg-red-100 text-red-700 border-red-300' },
-};
-
-const ST = {
-  ja: { title: '国家試験対策', selectCat: 'カテゴリを選んでください', selectDiff: '難易度', generate: '問題を生成する', generating: 'AI が問題を生成中...', answer: '答えを見る', next: '次の問題', correct: '✅ 正解！', wrong: '❌ 不正解', explain: '解説', tip: '💡 現場のヒント', restart: '別のカテゴリへ', back: 'トップへ戻る', score: 'スコア', total: '問', reading: '読み方', free: '1日3問まで無料', proUnlimited: 'プロプランで無制限' },
-  id: { title: 'Latihan Ujian Nasional', selectCat: 'Pilih kategori', selectDiff: 'Tingkat kesulitan', generate: 'Buat Soal', generating: 'AI sedang membuat soal...', answer: 'Lihat Jawaban', next: 'Soal Berikutnya', correct: '✅ Benar!', wrong: '❌ Salah', explain: 'Penjelasan', tip: '💡 Tips Lapangan', restart: 'Kategori Lain', back: 'Kembali', score: 'Skor', total: 'soal', reading: 'Cara baca', free: '3 soal/hari gratis', proUnlimited: 'Unlimited dengan Pro' },
-  vi: { title: 'Luyện thi Quốc gia', selectCat: 'Chọn danh mục', selectDiff: 'Độ khó', generate: 'Tạo câu hỏi', generating: 'AI đang tạo câu hỏi...', answer: 'Xem đáp án', next: 'Câu tiếp theo', correct: '✅ Đúng!', wrong: '❌ Sai', explain: 'Giải thích', tip: '💡 Mẹo thực tế', restart: 'Danh mục khác', back: 'Về đầu', score: 'Điểm', total: 'câu', reading: 'Cách đọc', free: '3 câu/ngày miễn phí', proUnlimited: 'Không giới hạn với Pro' },
-  tl: { title: 'Pagsasanay sa Pagsusulit', selectCat: 'Pumili ng kategorya', selectDiff: 'Antas ng kahirapan', generate: 'Gumawa ng Tanong', generating: 'Ginagawa ng AI ang tanong...', answer: 'Tingnan ang Sagot', next: 'Susunod na Tanong', correct: '✅ Tama!', wrong: '❌ Mali', explain: 'Paliwanag', tip: '💡 Tips sa Trabaho', restart: 'Ibang Kategorya', back: 'Bumalik', score: 'Marka', total: 'tanong', reading: 'Pagbabasa', free: '3 tanong/araw libre', proUnlimited: 'Walang limitasyon sa Pro' },
-  my: { title: 'စာမေးပွဲ လေ့ကျင့်ရေး', selectCat: 'အမျိုးအစား ရွေးပါ', selectDiff: 'ခက်ခဲမှု', generate: 'မေးခွန်း ဖန်တီးရန်', generating: 'AI မေးခွန်း ဖန်တီးနေသည်...', answer: 'အဖြေ ကြည့်ရန်', next: 'နောက်မေးခွန်း', correct: '✅ မှန်သည်!', wrong: '❌ မှားသည်', explain: 'ရှင်းလင်းချက်', tip: '💡 လက်တွေ့ အကြံ', restart: 'အခြားအမျိုးအစား', back: 'အပေါ်', score: 'ရမှတ်', total: 'မေးခွန်း', reading: 'ဖတ်ပုံ', free: 'တစ်နေ့ ၃ ခုအခမဲ့', proUnlimited: 'Pro ဖြင့် အကန့်အသတ်မရှိ' },
-  bn: { title: 'জাতীয় পরীক্ষার অনুশীলন', selectCat: 'বিভাগ বেছে নিন', selectDiff: 'কঠিনতার স্তর', generate: 'প্রশ্ন তৈরি করুন', generating: 'AI প্রশ্ন তৈরি করছে...', answer: 'উত্তর দেখুন', next: 'পরবর্তী প্রশ্ন', correct: '✅ সঠিক!', wrong: '❌ ভুল', explain: 'ব্যাখ্যা', tip: '💡 মাঠের পরামর্শ', restart: 'অন্য বিভাগ', back: 'ফিরুন', score: 'স্কোর', total: 'প্রশ্ন', reading: 'পড়ার উপায়', free: 'দিনে ৩টি বিনামূল্যে', proUnlimited: 'Pro-তে সীমাহীন' },
-  ne: { title: 'राष्ट्रिय परीक्षा अभ्यास', selectCat: 'श्रेणी छान्नुहोस्', selectDiff: 'कठिनाइ स्तर', generate: 'प्रश्न बनाउनुहोस्', generating: 'AI प्रश्न बनाउँदैछ...', answer: 'उत्तर हेर्नुहोस्', next: 'अर्को प्रश्न', correct: '✅ सही!', wrong: '❌ गलत', explain: 'व्याख्या', tip: '💡 कामको सुझाव', restart: 'अर्को श्रेणी', back: 'फर्कनुहोस्', score: 'स्कोर', total: 'प्रश्न', reading: 'पढ्ने तरिका', free: 'दिनमा ३ वटा निःशुल्क', proUnlimited: 'Pro मा असीमित' },
-  km: { title: 'អនុវត្តប្រឡងជាតិ', selectCat: 'ជ្រើសរើសប្រភេទ', selectDiff: 'កម្រិតពិបាក', generate: 'បង្កើតសំណួរ', generating: 'AI កំពុងបង្កើតសំណួរ...', answer: 'មើលចម្លើយ', next: 'សំណួរបន្ទាប់', correct: '✅ ត្រឹមត្រូវ!', wrong: '❌ មិនត្រឹមត្រូវ', explain: 'ការពន្យល់', tip: '💡 គន្លឹះការងារ', restart: 'ប្រភេទផ្សេង', back: 'ត្រលប់', score: 'ពិន្ទុ', total: 'សំណួរ', reading: 'របៀបអាន', free: '៣សំណួរ/ថ្ងៃឥតគិតថ្លៃ', proUnlimited: 'គ្មានដែនកំណត់ជាមួយ Pro' },
-};
+const DIFFICULTY = [
+  { id: 'basic', label: '基礎', icon: '⭐' },
+  { id: 'standard', label: '標準', icon: '⭐⭐' },
+  { id: 'advanced', label: '応用', icon: '⭐⭐⭐' },
+];
 
 export default function ShikenPage() {
-  const router = useRouter();
-  const { lang, t } = useLang();
-  const { user } = useUser();
-  const isPro = user?.plan === 'pro' || user?.plan === 'unlimited';
-  const st = ST[lang] || ST['ja'];
-
-  const [phase, setPhase] = useState('select'); // select → loading → question → result
-  const [category, setCategory] = useState(null);
-  const [difficulty, setDifficulty] = useState('medium');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState('standard');
   const [question, setQuestion] = useState(null);
-  const [selected, setSelected] = useState(null);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [score, setScore] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [dailyCount, setDailyCount] = useState(0);
-  const MAX_FREE = isPro ? 99999 : 3;
+  const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [phase, setPhase] = useState('select'); // select | quiz
 
-  const speak = (text) => {
-    if (typeof window === 'undefined') return;
-    const readable = convertToReadable(text);
-    const utterance = new SpeechSynthesisUtterance(readable);
-    utterance.lang = 'ja-JP';
-    utterance.rate = 0.85;
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const generateQuestion = async (cat) => {
-    if (dailyCount >= MAX_FREE) return;
-    setCategory(cat);
-    setPhase('loading');
-    setSelected(null);
-    setShowAnswer(false);
+  const generateQuestion = useCallback(async (categoryId, difficulty) => {
     setLoading(true);
+    setQuestion(null);
+    setSelectedAnswer(null);
+    setShowResult(false);
+
+    const cat = CATEGORIES.find(c => c.id === categoryId);
+    const diff = DIFFICULTY.find(d => d.id === difficulty);
+
+    const prompt = `あなたは介護福祉士国家試験の問題作成専門家です。
+以下の条件で問題を1問作成してください。
+
+科目：${cat.label}
+出題範囲：${cat.description}
+難易度：${diff.label}（${difficulty === 'basic' ? '基本的な知識を問う' : difficulty === 'standard' ? '実務に即した応用問題' : '複合的な判断力を問う難問'}）
+
+必ず以下のJSON形式のみで返してください（他の文字は一切含めないこと）：
+{
+  "question": "問題文（具体的な場面設定を含む）",
+  "choices": ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
+  "answer": 0,
+  "explanation": "正解の解説（なぜ正しいか、他の選択肢がなぜ誤りかを含む）",
+  "point": "この問題で学ぶべき重要ポイント（1〜2文）"
+}
+
+answerは正解の選択肢のインデックス（0〜3）です。
+問題は実際の国家試験に近い形式で、介護の現場を想定した具体的な場面を設定してください。`;
 
     try {
-      const res = await fetch('/api/shiken', {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: cat, lang, difficulty }),
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }],
+        }),
       });
-      const data = await res.json();
-      setQuestion(data.question);
-      setPhase('question');
-      setDailyCount(c => c + 1);
+
+      const data = await response.json();
+      const text = data.content?.[0]?.text || '';
+      const clean = text.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+      setQuestion({ ...parsed, categoryId, difficulty });
     } catch (e) {
-      setPhase('select');
+      console.error(e);
+      setQuestion({ error: true });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  }, []);
+
+  const handleStart = () => {
+    if (!selectedCategory) return;
+    setPhase('quiz');
+    setScore({ correct: 0, total: 0 });
+    generateQuestion(selectedCategory, selectedDifficulty);
   };
 
-  const handleAnswer = () => {
-    if (selected === null) return;
-    if (selected === question.answer) setScore(s => s + 1);
-    setTotal(t => t + 1);
-    setShowAnswer(true);
+  const handleAnswer = (index) => {
+    if (showResult) return;
+    setSelectedAnswer(index);
+    setShowResult(true);
+    const isCorrect = index === question.answer;
+    setScore(s => ({
+      correct: s.correct + (isCorrect ? 1 : 0),
+      total: s.total + 1,
+    }));
   };
 
   const handleNext = () => {
-    if (dailyCount >= MAX_FREE) {
-      setPhase('limit');
-      return;
-    }
-    generateQuestion(category);
+    generateQuestion(selectedCategory, selectedDifficulty);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar />
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <button onClick={() => router.push('/')} className="mb-6 text-green-600 hover:underline text-sm">← {st.back}</button>
+  const handleBack = () => {
+    setPhase('select');
+    setQuestion(null);
+    setSelectedAnswer(null);
+    setShowResult(false);
+  };
 
-        {/* ヘッダー */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-500 rounded-2xl p-6 text-white mb-6 shadow-lg">
-          <h1 className="text-2xl font-bold mb-1">📚 {st.title}</h1>
-          <p className="text-blue-100 text-sm">AIが毎回新しい問題を生成します・無限に練習できます</p>
-          <div className="mt-3 flex items-center justify-between">
-            <div className="text-xs text-blue-200">
-              {st.score}：{score} / {total}{st.total}
-            </div>
-            <div className="text-xs bg-white/20 rounded-full px-3 py-1">
-              今日：{dailyCount}/{isPro ? '∞' : MAX_FREE} {isPro ? '（プロ・無制限）' : '(' + st.free + ')'}
-            </div>
-          </div>
-        </div>
+  const cat = CATEGORIES.find(c => c.id === selectedCategory);
 
-        {/* カテゴリ選択 */}
-        {phase === 'select' && (
-          <div>
-            <div className="flex gap-2 mb-6 flex-wrap">
-              <p className="text-gray-600 font-semibold w-full">{st.selectCat}</p>
-              <p className="text-xs text-gray-400 w-full">{st.selectDiff}：</p>
-              {Object.entries(DIFFICULTIES).map(([key, d]) => (
-                <button key={key} onClick={() => setDifficulty(key)}
-                  className={`border rounded-full px-3 py-1 text-xs font-bold transition-all ${difficulty === key ? d.color + ' border-2' : 'bg-white text-gray-500 border-gray-200'}`}>
-                  {d.ja}
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {Object.entries(CATEGORIES).map(([key, cat]) => (
-                <button key={key} onClick={() => generateQuestion(key)}
-                  disabled={dailyCount >= MAX_FREE}
-                  className="bg-white border border-blue-100 rounded-2xl p-4 text-center hover:shadow-md hover:border-blue-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                  <div className="text-3xl mb-2">{cat.icon}</div>
-                  <p className="font-bold text-gray-800 text-xs">{cat.ja}</p>
-                  <p className="text-xs text-gray-400 mt-1">{cat.en}</p>
-                </button>
-              ))}
-            </div>
-            {dailyCount >= MAX_FREE && !isPro && (
-              <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 text-center">
-                <p className="text-yellow-700 font-bold mb-2">今日の無料枠（{MAX_FREE}問）を使い切りました</p>
-                <p className="text-yellow-600 text-sm mb-3">{st.proUnlimited}</p>
-                <a href="https://buy.stripe.com/3cI6oz52k9VoakZ5sWcs802" target="_blank" rel="noopener noreferrer"
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2 rounded-full text-sm inline-block">
-                  💎 プロプランへ（¥500/月）
-                </a>
+  // ---- カテゴリ選択画面 ----
+  if (phase === 'select') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          {/* ヘッダー */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-800 mb-1">📝 介護福祉士 国家試験対策</h1>
+            <p className="text-sm text-gray-500">AIが出題基準に沿った問題を生成します</p>
+            {score.total > 0 && (
+              <div className="mt-3 inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-1.5 text-sm">
+                <span className="text-gray-500">前回成績</span>
+                <span className="font-bold text-emerald-600">{score.correct}/{score.total}問正解</span>
+                <span className="text-gray-400">({Math.round(score.correct / score.total * 100)}%)</span>
               </div>
             )}
           </div>
-        )}
+
+          {/* 難易度選択 */}
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-gray-600 mb-2">難易度</p>
+            <div className="flex gap-2">
+              {DIFFICULTY.map(d => (
+                <button key={d.id} onClick={() => setSelectedDifficulty(d.id)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    selectedDifficulty === d.id
+                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300'
+                  }`}>
+                  {d.icon} {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* カテゴリ選択 */}
+          <p className="text-sm font-semibold text-gray-600 mb-3">科目を選択</p>
+          <div className="grid grid-cols-1 gap-3 mb-8">
+            {CATEGORIES.map(c => (
+              <button key={c.id} onClick={() => setSelectedCategory(c.id)}
+                className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
+                  selectedCategory === c.id
+                    ? `${c.bg} ${c.border} shadow-md`
+                    : 'bg-white border-gray-200 hover:border-gray-300'
+                }`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{c.icon}</span>
+                  <div className="flex-1">
+                    <p className={`font-semibold text-sm ${selectedCategory === c.id ? c.text : 'text-gray-700'}`}>
+                      {c.label}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">{c.description}</p>
+                  </div>
+                  {selectedCategory === c.id && (
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${c.bg} ${c.text} border ${c.border}`}>選択中</span>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* スタートボタン */}
+          <button onClick={handleStart} disabled={!selectedCategory}
+            className={`w-full py-4 rounded-2xl font-bold text-white text-base transition-all ${
+              selectedCategory
+                ? `bg-gradient-to-r ${cat?.color} shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]`
+                : 'bg-gray-300 cursor-not-allowed'
+            }`}>
+            {selectedCategory ? `${cat.icon} ${cat.label}を開始` : '科目を選んでください'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- 問題画面 ----
+  return (
+    <div className="min-h-screen bg-gray-50 pb-16">
+      <div className="max-w-2xl mx-auto px-4 py-6">
+
+        {/* ヘッダー */}
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={handleBack}
+            className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+            ← 科目選択
+          </button>
+          <div className="flex items-center gap-3">
+            <span className={`text-xs font-bold px-3 py-1 rounded-full ${cat.bg} ${cat.text} border ${cat.border}`}>
+              {cat.icon} {cat.label}
+            </span>
+            {score.total > 0 && (
+              <span className="text-xs text-gray-500">
+                {score.correct}/{score.total}問正解
+              </span>
+            )}
+          </div>
+        </div>
 
         {/* ローディング */}
-        {phase === 'loading' && (
-          <div className="bg-white rounded-2xl border p-12 text-center">
-            <div className="text-5xl mb-4 animate-bounce">🤖</div>
-            <p className="text-gray-500">{st.generating}</p>
-            <p className="text-xs text-gray-400 mt-2">カテゴリ：{category && CATEGORIES[category]?.ja}</p>
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <p className="text-sm text-gray-500">AIが問題を生成中...</p>
+          </div>
+        )}
+
+        {/* エラー */}
+        {!loading && question?.error && (
+          <div className="text-center py-16">
+            <p className="text-gray-500 mb-4">問題の生成に失敗しました</p>
+            <button onClick={handleNext}
+              className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold">
+              もう一度試す
+            </button>
           </div>
         )}
 
         {/* 問題表示 */}
-        {phase === 'question' && question && (
+        {!loading && question && !question.error && (
           <div className="space-y-4">
-            {/* カテゴリ・難易度 */}
-            <div className="bg-white rounded-2xl border shadow-sm p-6">
-              <div className="flex gap-2 mb-3 flex-wrap">
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-                  {question.category}
-                </span>
-                <span className={`text-xs border px-2 py-1 rounded-full font-medium ${DIFFICULTIES[difficulty]?.color}`}>
-                  {DIFFICULTIES[difficulty]?.ja}
-                </span>
-              </div>
-
-              {/* 問題文 */}
-              <p className="text-gray-800 font-semibold leading-relaxed text-lg mb-3">
-                {question.question}
+            {/* 問題文 */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <p className="text-xs font-semibold text-indigo-500 mb-2">
+                {DIFFICULTY.find(d => d.id === question.difficulty)?.icon} {DIFFICULTY.find(d => d.id === question.difficulty)?.label}
               </p>
-
-              {/* 🔊 読み上げボタン */}
-              <button onClick={() => speak(question.question)}
-                className="text-xs text-blue-500 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-50 mb-3">
-                🔊 読み上げる
-              </button>
-
-              {/* ふりがな */}
-              {question.furigana && Object.keys(question.furigana).length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(question.furigana).map(([kanji, furi]) => (
-                    <span key={kanji} className="text-xs bg-yellow-50 border border-yellow-200 rounded-lg px-2 py-1 text-gray-600">
-                      {kanji}（{furi}）
-                    </span>
-                  ))}
-                </div>
-              )}
+              <p className="text-gray-800 font-medium leading-relaxed text-sm">{question.question}</p>
             </div>
 
             {/* 選択肢 */}
-            <div className="space-y-3">
-              {question.choices.map((choice, idx) => {
-                let style = 'bg-white border-gray-200 text-gray-700';
-                if (showAnswer) {
-                  if (idx === question.answer) style = 'bg-green-50 border-green-400 text-green-800 font-bold';
-                  else if (idx === selected && idx !== question.answer) style = 'bg-red-50 border-red-400 text-red-700';
-                } else if (idx === selected) style = 'bg-blue-50 border-blue-400 text-blue-800';
+            <div className="space-y-2.5">
+              {question.choices.map((choice, i) => {
+                let style = 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300 hover:bg-indigo-50';
+                if (showResult) {
+                  if (i === question.answer) {
+                    style = 'bg-emerald-50 border-emerald-400 text-emerald-800';
+                  } else if (i === selectedAnswer && i !== question.answer) {
+                    style = 'bg-red-50 border-red-400 text-red-800';
+                  } else {
+                    style = 'bg-gray-50 border-gray-200 text-gray-400';
+                  }
+                } else if (selectedAnswer === i) {
+                  style = 'bg-indigo-50 border-indigo-400 text-indigo-800';
+                }
+
                 return (
-                  <button key={idx} onClick={() => !showAnswer && setSelected(idx)}
-                    className={`w-full text-left border rounded-xl p-4 text-sm transition-all ${style}`}>
-                    <span className="font-bold mr-2">{idx + 1}.</span>{choice}
-                    {showAnswer && idx === question.answer && <span className="ml-2">✓</span>}
+                  <button key={i} onClick={() => handleAnswer(i)}
+                    disabled={showResult}
+                    className={`w-full text-left px-4 py-3.5 rounded-xl border-2 text-sm font-medium transition-all ${style}`}>
+                    <span className="font-bold mr-2">{['A', 'B', 'C', 'D'][i]}.</span>
+                    {choice}
+                    {showResult && i === question.answer && <span className="ml-2">✅</span>}
+                    {showResult && i === selectedAnswer && i !== question.answer && <span className="ml-2">❌</span>}
                   </button>
                 );
               })}
             </div>
 
-            {!showAnswer ? (
-              <button onClick={handleAnswer} disabled={selected === null}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl transition-colors">
-                {st.answer}
-              </button>
-            ) : (
-              <div className="space-y-3">
-                {/* 解説 */}
-                <div className={`rounded-2xl p-5 ${selected === question.answer ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                  <p className="font-bold text-lg mb-3">
-                    {selected === question.answer ? st.correct : st.wrong}
-                  </p>
-
-                  {/* 日本語解説 */}
-                  <div className="mb-3">
-                    <p className="text-xs font-bold text-gray-500 mb-1">📖 {st.explain}（日本語）</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">{question.explanation?.ja}</p>
-                    <button onClick={() => speak(question.explanation?.ja)}
-                      className="mt-1 text-xs text-blue-500 border border-blue-200 rounded-full px-2 py-0.5 hover:bg-blue-50">
-                      🔊 聞く
-                    </button>
-                  </div>
-
-                  {/* 母国語解説 */}
-                  {question.explanation?.[lang] && lang !== 'ja' && (
-                    <div className="bg-white/60 rounded-xl p-3">
-                      <p className="text-xs font-bold text-gray-500 mb-1">💬 {st.explain}</p>
-                      <p className="text-sm text-gray-700 leading-relaxed">{question.explanation[lang]}</p>
-                    </div>
-                  )}
-
-                  {/* 現場のヒント */}
-                  {question.tip && (
-                    <div className="mt-3 bg-yellow-50 border border-yellow-100 rounded-xl p-3">
-                      <p className="text-xs font-bold text-yellow-700 mb-1">{st.tip}</p>
-                      <p className="text-sm text-gray-700">{question.tip}</p>
-                    </div>
-                  )}
+            {/* 解説 */}
+            {showResult && (
+              <div className={`rounded-2xl p-5 border ${selectedAnswer === question.answer ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                <p className={`font-bold text-sm mb-2 ${selectedAnswer === question.answer ? 'text-emerald-700' : 'text-red-700'}`}>
+                  {selectedAnswer === question.answer ? '✅ 正解！' : '❌ 不正解'}
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed mb-3">{question.explanation}</p>
+                <div className="bg-white rounded-xl p-3 border border-gray-200">
+                  <p className="text-xs font-semibold text-indigo-600 mb-1">📌 重要ポイント</p>
+                  <p className="text-xs text-gray-600">{question.point}</p>
                 </div>
-
-                {/* 次へボタン */}
-                <div className="flex gap-3">
-                  <button onClick={handleNext}
-                    disabled={dailyCount >= MAX_FREE}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl transition-colors">
-                    {dailyCount >= MAX_FREE ? `今日の上限（${MAX_FREE}問）` : `${st.next} →`}
-                  </button>
-                  <button onClick={() => setPhase('select')}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-xl transition-colors text-sm">
-                    {st.restart}
-                  </button>
-                </div>
-
-                {dailyCount >= MAX_FREE && !isPro && (
-                  <a href="https://buy.stripe.com/3cI6oz52k9VoakZ5sWcs802" target="_blank" rel="noopener noreferrer"
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors block text-center">
-                    💎 プロプランで無制限に練習する（¥500/月）
-                  </a>
-                )}
               </div>
+            )}
+
+            {/* 次の問題 */}
+            {showResult && (
+              <button onClick={handleNext}
+                className={`w-full py-4 rounded-2xl font-bold text-white text-sm bg-gradient-to-r ${cat.color} shadow-md hover:shadow-lg transition-all hover:scale-[1.01]`}>
+                次の問題へ →
+              </button>
             )}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
