@@ -32,6 +32,7 @@ export default function Footer() {
             <ul className="space-y-1 text-xs text-gray-400">
               <li><button onClick={() => router.push('/kiroku')} className="hover:text-white transition-colors">📝 {ft.kiroku}</button></li>
               <li><button onClick={() => router.push('/shiken')} className="hover:text-white transition-colors">📚 {ft.shiken}</button></li>
+              <li><button onClick={() => router.push('/kijun')} className="hover:text-white transition-colors">📋 出題基準</button></li>
               <li><button onClick={() => router.push('/roleplay')} className="hover:text-white transition-colors">🤖 {ft.roleplay}</button></li>
               <li><button onClick={() => router.push('/progress')} className="hover:text-white transition-colors">📊 {ft.progress}</button></li>
             </ul>
