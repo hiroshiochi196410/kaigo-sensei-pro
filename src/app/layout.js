@@ -1,5 +1,6 @@
 import './globals.css';
 import { LangProvider } from '@/lib/LangContext';
+import { UserProvider } from '@/components/UserAuth';
 import Footer from '@/components/Footer';
 import LangSelectPopup from '@/components/LangSelectPopup';
 
@@ -13,9 +14,11 @@ export default function RootLayout({ children }) {
     <html lang="ja">
       <body>
         <LangProvider>
-          <LangSelectPopup />
-          {children}
-          <Footer />
+          <UserProvider>
+            <LangSelectPopup />
+            {children}
+            <Footer />
+          </UserProvider>
         </LangProvider>
       </body>
     </html>

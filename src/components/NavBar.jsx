@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/LangContext';
 import LanguageSwitcher from './LanguageSwitcher';
+import { UserBadge } from './UserAuth';
 
 export default function NavBar() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function NavBar() {
             </button>
           ))}
         </div>
+        <UserBadge />
         <LanguageSwitcher />
       </div>
     </nav>
