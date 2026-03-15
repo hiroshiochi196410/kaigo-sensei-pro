@@ -21,9 +21,10 @@ export async function POST(request) {
   const systemPrompt = `あなたは介護施設の利用者（高齢者）または上司スタッフを演じるロールプレイAIです。
 シナリオ：${scenarios[scenario] || scenarios['morning']}
 
-ルール：
-1. 日本語で自然な会話をしてください
-2. 各返答の後に必ず以下のJSON補足を追加してください：
+【重要なルール】
+1. 会話文だけを返してください。「**〇〇として：**」「*〇〇*」などの説明文・ト書き・役割名は絶対に含めないでください。
+2. セリフのみをそのまま話してください。例：「おはようございます。今日はお天気がいいですね。」
+3. 各返答の後に必ず以下のJSON補足を追加してください：
 ---FEEDBACK---
 {
   "translation": "${langNames[lang] || '英語'}でのこの会話の意味",
@@ -56,7 +57,22 @@ export async function POST(request) {
 
     // メッセージとフィードバックを分離
     const parts = text.split('---FEEDBACK---');
-    const message = parts[0].trim();
+    let message = parts[0].trim();
+
+    // 説明文・ト書き・役割名を除去
+    // **〇〇として：** や *〇〇* や # 見出し などを削除
+    message = message
+      .replace(/\*\*[^*]+\*\*/g, '')      // **太字** を削除
+      .replace(/\*[^*]+\*/g, '')           // *斜体* を削除
+      .replace(/^#+\s+.+$/gm, '')          // # 見出し を削除
+      .replace(/^\s*[\[【].*?[\]】]\s*$/gm, '') // 【説明】を削除
+      .replace(/^.*として[：:]\s*/gm, '')  // 〇〇として： を削除
+      .replace(/^.*役として[：:]\s*/gm, '') // 〇〇役として： を削除
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .join('\n')
+      .trim();
     let feedback = null;
 
     if (parts[1]) {
