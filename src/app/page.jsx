@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/LangContext';
 import NavBar from '@/components/NavBar';
+import MascotWidget from '@/components/MascotWidget';
 import { EXTRA_TEXT } from '@/locales/languages';
 
 export default function HomePage() {
@@ -56,6 +57,24 @@ export default function HomePage() {
       btn: 'bg-yellow-500 hover:bg-yellow-600',
       badge: '🎟️',
     },
+    {
+      icon: '📋',
+      title: '出題基準',
+      desc: '介護福祉士試験の出題基準を確認しよう',
+      href: '/kijun',
+      color: 'from-indigo-50 to-violet-100 border-indigo-200',
+      btn: 'bg-indigo-500 hover:bg-indigo-600',
+      badge: null,
+    },
+    {
+      icon: '🌸',
+      title: '先輩に会いに行く',
+      desc: 'カンボジア出身・介護福祉士テーリン先輩からのメッセージ',
+      href: '/senpai',
+      color: 'from-pink-50 to-rose-100 border-pink-200',
+      btn: 'bg-pink-500 hover:bg-pink-600',
+      badge: '💌',
+    },
   ];
 
   const flags = ['🇯🇵','🇮🇩','🇻🇳','🇵🇭','🇲🇲','🇧🇩','🇳🇵','🇰🇭'];
@@ -100,6 +119,9 @@ export default function HomePage() {
           </div>
         ))}
       </section>
+
+      {/* マスコット */}
+      <MascotWidget lang={lang} />
     </div>
   );
 }
