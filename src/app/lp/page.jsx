@@ -221,10 +221,20 @@ export default function LPPage() {
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => router.push('/')}
-                  className={`w-full ${plan.btn} text-white font-bold py-2.5 rounded-xl text-sm transition-colors`}>
-                  {lp.cta}
-                </button>
+                {plan.key === 'pro' ? (
+                  <a
+                    href="https://buy.stripe.com/3cI6oz52k9VoakZ5sWcs802"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`w-full block text-center ${plan.btn} text-white font-bold py-2.5 rounded-xl text-sm transition-colors`}>
+                    💳 {lp.cta}
+                  </a>
+                ) : (
+                  <button onClick={() => router.push('/')}
+                    className={`w-full ${plan.btn} text-white font-bold py-2.5 rounded-xl text-sm transition-colors`}>
+                    {lp.cta}
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -233,10 +243,13 @@ export default function LPPage() {
           <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center">
             <h3 className="font-bold text-yellow-800 mb-2">🎟️ {lp.couponTitle}</h3>
             <p className="text-yellow-700 text-sm mb-4">{lp.couponDesc}</p>
-            <button onClick={() => router.push('/plan')}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-6 py-2 rounded-full text-sm transition-colors">
-              {lp.couponBtn}
-            </button>
+            <a
+              href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1DZzbc2Em4gn-ABTKavXY1dpFHRpO0ynpn8iSeOx_9vRUdr2MDLcRSv_tZHY4aMVy6ceqQGO2L"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-6 py-2 rounded-full text-sm transition-colors inline-block">
+              📅 {lp.couponBtn}
+            </a>
           </div>
         </div>
       </section>

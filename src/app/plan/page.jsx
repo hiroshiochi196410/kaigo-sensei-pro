@@ -147,9 +147,29 @@ export default function PlanPage() {
                       </li>
                     ))}
                   </ul>
-                  <button className={`w-full ${plan.btnColor} text-white font-bold py-2.5 rounded-xl text-sm transition-colors`}>
-                    {plan.key === 'free' ? '今すぐ始める' : plan.key === 'pro' ? 'アップグレード' : (pt.contact || '問い合わせる')}
-                  </button>
+                  {plan.key === 'free' ? (
+                    <button
+                      onClick={() => router.push('/')}
+                      className={`w-full ${plan.btnColor} text-white font-bold py-2.5 rounded-xl text-sm transition-colors`}>
+                      今すぐ始める
+                    </button>
+                  ) : plan.key === 'pro' ? (
+                    <a
+                      href="https://buy.stripe.com/3cI6oz52k9VoakZ5sWcs802"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`w-full block text-center ${plan.btnColor} text-white font-bold py-2.5 rounded-xl text-sm transition-colors`}>
+                      💳 アップグレード
+                    </a>
+                  ) : (
+                    <a
+                      href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1DZzbc2Em4gn-ABTKavXY1dpFHRpO0ynpn8iSeOx_9vRUdr2MDLcRSv_tZHY4aMVy6ceqQGO2L"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`w-full block text-center ${plan.btnColor} text-white font-bold py-2.5 rounded-xl text-sm transition-colors`}>
+                      📅 {pt.contact || '無料説明を予約する'}
+                    </a>
+                  )}
                 </div>
               </div>
             );
