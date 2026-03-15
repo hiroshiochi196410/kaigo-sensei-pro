@@ -58,7 +58,19 @@ export function UserProvider({ children }) {
 
 export function useUser() {
   const ctx = useContext(UserContext);
-  if (!ctx) return { user: null, loginWithCode: () => false, logout: () => {}, loaded: true };
+  if (!ctx) {
+    // UserProviderの外で呼ばれた場合、localStorageから直接読む
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('kaigo_user_profile');
+        const user = saved ? JSON.parse(saved) : null;
+        return { user, loginWithCode: () => false, logout: () => {}, loaded: true };
+      } catch {
+        return { user: null, loginWithCode: () => false, logout: () => {}, loaded: true };
+      }
+    }
+    return { user: null, loginWithCode: () => false, logout: () => {}, loaded: true };
+  }
   return ctx;
 }
 
