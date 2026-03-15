@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/LangContext';
 import NavBar from '@/components/NavBar';
+import { convertToReadable } from '@/lib/kaigo-reading';
 import { useUser } from '@/components/UserAuth';
 
 const CATEGORIES = {
@@ -57,7 +58,8 @@ export default function ShikenPage() {
 
   const speak = (text) => {
     if (typeof window === 'undefined') return;
-    const utterance = new SpeechSynthesisUtterance(text);
+    const readable = convertToReadable(text);
+    const utterance = new SpeechSynthesisUtterance(readable);
     utterance.lang = 'ja-JP';
     utterance.rate = 0.85;
     window.speechSynthesis.speak(utterance);

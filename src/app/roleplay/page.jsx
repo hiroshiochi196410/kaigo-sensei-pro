@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/LangContext';
 import NavBar from '@/components/NavBar';
 import { useUser } from '@/components/UserAuth';
+import { convertToReadable } from '@/lib/kaigo-reading';
+import { useUser } from '@/components/UserAuth';
 
 const SCENARIOS = {
   morning:   { icon: '🌅', ja: '朝の起床介助',    en: 'Morning Care' },
@@ -60,7 +62,8 @@ export default function RoleplayPage() {
   const speak = (text, slow = false) => {
     if (typeof window === 'undefined') return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    const readable = convertToReadable(text);
+    const utterance = new SpeechSynthesisUtterance(readable);
     utterance.lang = 'ja-JP';
     utterance.rate = slow ? 0.6 : 0.85;
     utterance.onstart = () => setSpeaking(true);
