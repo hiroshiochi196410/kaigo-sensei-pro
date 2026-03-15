@@ -4,18 +4,21 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/LangContext';
 import NavBar from '@/components/NavBar';
+import { useUser } from '@/components/UserAuth';
 import { EXTRA_TEXT } from '@/locales/languages';
 
 export default function KirokuPage() {
   const router = useRouter();
   const { lang, t } = useLang();
+  const { user } = useUser();
+  const isPro = user?.plan === 'pro' || user?.plan === 'unlimited';
   const et = EXTRA_TEXT[lang] || EXTRA_TEXT['ja'];
 
   const [input, setInput] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
-  const MAX_FREE = 10;
+  const MAX_FREE = isPro ? 99999 : 3;
 
   const examples = {
     ja: '田中さん（85歳）が朝ごはんをほとんど食べなかった。少し元気がなく、トイレに3回行った。',
@@ -31,7 +34,7 @@ export default function KirokuPage() {
   const handleGenerate = async () => {
     if (!input.trim()) return;
     if (usageCount >= MAX_FREE) {
-      alert('本日の無料利用回数（10回）に達しました。プロプランにアップグレードしてください。');
+      alert(isPro ? '本日の利用上限に達しました。' : '本日の無料利用回数（3回）に達しました。プロプランにアップグレードしてください。');
       return;
     }
 
@@ -67,7 +70,7 @@ export default function KirokuPage() {
           <h1 className="text-2xl font-bold mb-1">📝 {et.kiroku}</h1>
           <p className="text-green-100 text-sm">{et.kirokuDesc}</p>
           <div className="mt-3 text-xs text-green-200">
-            本日の利用回数：{usageCount} / {MAX_FREE}回（無料）
+            本日の利用回数：{usageCount} / {isPro ? '∞' : MAX_FREE}回{isPro ? '（プロ）' : '（無料）'}
           </div>
         </div>
 

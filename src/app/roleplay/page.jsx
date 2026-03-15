@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/LangContext';
 import NavBar from '@/components/NavBar';
+import { useUser } from '@/components/UserAuth';
 
 const SCENARIOS = {
   morning:   { icon: '🌅', ja: '朝の起床介助',    en: 'Morning Care' },
@@ -33,6 +34,8 @@ const RT = {
 export default function RoleplayPage() {
   const router = useRouter();
   const { lang, t } = useLang();
+  const { user } = useUser();
+  const isPro = user?.plan === 'pro' || user?.plan === 'unlimited';
   const rt = RT[lang] || RT['ja'];
 
   const [phase, setPhase] = useState('select'); // select → hint → chat
@@ -75,17 +78,40 @@ export default function RoleplayPage() {
     if (!SR) { alert('Google Chromeをお使いください。'); return; }
     const recognition = new SR();
     recognition.lang = SPEECH_LANG[lang] || 'ja-JP';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.onresult = (e) => setInput(e.results[0][0].transcript);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
+    recognition.continuous = true;       // 話し続けられる
+    recognition.interimResults = true;   // 途中結果も表示
+
+    let finalTranscript = '';
+
+    recognition.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalTranscript += e.results[i][0].transcript;
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      // 確定テキスト＋途中テキストを表示
+      setInput(finalTranscript + interim);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      // 最終結果をセット
+      if (finalTranscript) setInput(finalTranscript);
+    };
+    recognition.onerror = () => { setIsListening(false); };
     recognitionRef.current = recognition;
+    finalTranscript = '';
     recognition.start();
     setIsListening(true);
   };
 
-  const stopListening = () => { recognitionRef.current?.stop(); setIsListening(false); };
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+  };
 
   // シナリオ選択 → ヒント取得
   const selectScenario = async (key) => {

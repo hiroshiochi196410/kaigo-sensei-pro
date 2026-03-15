@@ -4,133 +4,225 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/LangContext';
 import NavBar from '@/components/NavBar';
+import { useUser } from '@/components/UserAuth';
 
-const QUESTIONS = [
-  {
-    id: 1, category: '介護の基本',
-    question: '介護福祉士の職業倫理として、最も適切なものはどれか。',
-    furigana: { '介護福祉士': 'かいごふくしし', '職業倫理': 'しょくぎょうりんり', '適切': 'てきせつ' },
-    choices: ['利用者の意思よりも家族の意向を優先する', '利用者の秘密を他の職員と共有する', '利用者の自己決定を尊重する', '利用者に対して常に指示・命令する'],
-    answer: 2,
-    explanation: { ja: '介護福祉士は利用者の自己決定を尊重することが基本です。利用者が自分で決める権利を大切にし、その人らしい生活を支援します。', id: 'Perawat sosial harus menghormati keputusan pengguna layanan. Menghargai hak pengguna untuk memutuskan sendiri dan mendukung kehidupan yang sesuai dengan diri mereka.', vi: 'Nhân viên chăm sóc phải tôn trọng quyền tự quyết của người dùng dịch vụ.', tl: 'Ang mga manggagawa sa pag-aalaga ay dapat igalang ang sariling desisyon ng mga gumagamit ng serbisyo.', my: 'လူမှုဝန်ထမ်းများသည် ဝန်ဆောင်မှုသုံးစွဲသူများ၏ ကိုယ်ပိုင်ဆုံးဖြတ်ချက်ကို လေးစားရမည်။', bn: 'সেবা গ্রহণকারীদের স্বনির্ণয়ের অধিকারকে সম্মান করতে হবে।', ne: 'सेवा प्रयोगकर्ताहरूको आत्म-निर्णयको अधिकारलाई सम्मान गर्नुपर्छ।', km: 'អ្នកថែទាំត្រូវគោរពការសម្រេចចិត្តដោយខ្លួនឯងរបស់អ្នកប្រើប្រាស់សេវា។' },
-  },
-  {
-    id: 2, category: '身体介護',
-    question: '移乗介助（ベッドから車椅子）の際の基本姿勢として正しいものはどれか。',
-    furigana: { '移乗介助': 'いじょうかいじょ', '車椅子': 'くるまいす', '基本姿勢': 'きほんしせい' },
-    choices: ['腰を曲げて利用者を抱える', '膝を曲げて重心を低くする', '腕の力だけで持ち上げる', '素早く動いて時間を短縮する'],
-    answer: 1,
-    explanation: { ja: '移乗介助では、介護者が膝を曲げて重心を低くすることで腰への負担を減らします。ボディメカニクスの基本です。', id: 'Dalam membantu transfer, perawat menekuk lutut untuk merendahkan pusat gravitasi, mengurangi beban pada pinggang.', vi: 'Khi hỗ trợ di chuyển, người chăm sóc cúi đầu gối để hạ trọng tâm, giảm tải cho lưng.', tl: 'Sa pagtutulungan ng paglipat, ibaluktot ang tuhod para ibaba ang sentro ng gravity.', my: 'အကူးအပြောင်း ကူညီစဉ်တွင် ဒူးကိုကွေးကာ ကိုယ်ဌာနချိန်ကို နိမ့်ချပါ။', bn: 'স্থানান্তর সহায়তার সময় হাঁটু বাঁকিয়ে মাধ্যাকর্ষণ কেন্দ্র নিচু করুন।', ne: 'स्थानान्तरण सहायताको बेला घुँडा मोडेर गुरुत्वाकर्षण केन्द्र तल राख्नुहोस्।', km: 'ពេលជួយផ្ទេរ ពត់ជង្គង់ ដើម្បីបញ្ចុះមជ្ឈមណ្ឌលទំនាញ។' },
-  },
-  {
-    id: 3, category: '認知症',
-    question: '認知症の人への対応として最も適切なものはどれか。',
-    furigana: { '認知症': 'にんちしょう', '対応': 'たいおう', '適切': 'てきせつ' },
-    choices: ['間違いを強く訂正する', 'できないことを責める', 'その人のペースに合わせて話す', '大きな声で急がせる'],
-    answer: 2,
-    explanation: { ja: '認知症の方には、その人のペースに合わせてゆっくり話すことが大切です。焦らせたり訂正したりすると不安や混乱を招きます。', id: 'Untuk orang dengan demensia, penting untuk berbicara perlahan sesuai dengan kecepatan mereka.', vi: 'Đối với người bị sa sút trí tuệ, điều quan trọng là nói chuyện chậm rãi theo tốc độ của họ.', tl: 'Para sa mga taong may dementia, mahalaga ang magsalita nang dahan-dahan ayon sa kanilang bilis.', my: 'ဦးနှောက်ဆိုင်ရာ ချို့ယွင်းမှုရှိသူများနှင့် ၎င်းတို့၏ အချိန်နှုန်းနှင့် ညီအောင် ဖြည်းဖြည်းချင်း ပြောဆိုရမည်။', bn: 'স্মৃতিভ্রংশ ব্যক্তিদের সাথে তাদের গতিতে ধীরে ধীরে কথা বলুন।', ne: 'मनोभ्रंश भएका व्यक्तिहरूसँग उनीहरूको गतिमा बिस्तारै कुरा गर्नुहोस्।', km: 'សម្រាប់អ្នកដែលមានជំងឺវង្វេងចំណាំ សូមនិយាយយឺតៗ ស្របតាមល្បឿនរបស់ពួកគេ។' },
-  },
-  {
-    id: 4, category: '食事介助',
-    question: '食事介助の際、誤嚥を防ぐための姿勢として正しいものはどれか。',
-    furigana: { '食事介助': 'しょくじかいじょ', '誤嚥': 'ごえん', '姿勢': 'しせい' },
-    choices: ['仰向けで食事をする', '上体を30度以下に起こす', '上体を30〜60度程度起こす', '頭を後ろに反らせる'],
-    answer: 2,
-    explanation: { ja: '誤嚥を防ぐには、上体を30〜60度程度起こした姿勢が適切です。完全に横になっていると食べ物が気管に入りやすくなります。', id: 'Untuk mencegah aspirasi, postur yang sesuai adalah memposisikan tubuh bagian atas sekitar 30-60 derajat.', vi: 'Để ngăn ngừa hít sặc, tư thế thích hợp là nâng phần trên cơ thể khoảng 30-60 độ.', tl: 'Para maiwasan ang pagkalanghap, ang tamang postura ay ang itaas ang itaas na bahagi ng katawan ng 30-60 degrees.', my: 'အစားအစာ မမှန်မကန်ဝင်မှုကို တားဆီးရန် ခန္ဓာကိုယ်အပေါ်ပိုင်းကို ၃၀-၆၀ ဒီဂရီ မြှောက်ထားပါ။', bn: 'অ্যাসপিরেশন প্রতিরোধ করতে উপরের শরীর প্রায় ৩০-৬০ ডিগ্রি উঁচু করা উচিত।', ne: 'श्वासनलीमा खाना जानबाट रोक्न शरीरको माथिल्लो भाग ३०-६० डिग्री उठाउनु उचित हुन्छ।', km: 'ដើម្បីការពារការស្រូបចូល គួរលើកផ្នែកខាងលើនៃរាងកាយប្រហែល ៣០-៦០ ដឺក្រេ។' },
-  },
-  {
-    id: 5, category: '排泄介助',
-    question: 'おむつ交換の際に最も重要なことはどれか。',
-    furigana: { '排泄': 'はいせつ', 'おむつ交換': 'おむつこうかん', '重要': 'じゅうよう' },
-    choices: ['できるだけ素早く終わらせる', '利用者の羞恥心に配慮する', '他のスタッフに大声で知らせる', '窓を開けて換気する'],
-    answer: 1,
-    explanation: { ja: 'おむつ交換では利用者の羞恥心やプライバシーへの配慮が最重要です。カーテンを閉める、声かけをする等の対応が必要です。', id: 'Dalam mengganti popok, yang paling penting adalah memperhatikan rasa malu dan privasi pengguna.', vi: 'Khi thay tã, điều quan trọng nhất là quan tâm đến sự xấu hổ và quyền riêng tư của người dùng.', tl: 'Sa pagpapalit ng diaper, ang pinaka-mahalaga ay ang pag-aalaga sa kahihiyan at privacy ng gumagamit.', my: 'ဒိုင်ပါဝတ်ဆောင်မှုပြောင်းလဲသောအခါ အသုံးပြုသူ၏ ရှက်ကြောက်မှုနှင့် တစ်ကိုယ်ရေကိုယ်တာကို ဂရုပြုပါ။', bn: 'ডায়াপার পরিবর্তনের সময় ব্যবহারকারীর লজ্জা ও গোপনীয়তার প্রতি মনোযোগ দেওয়া সবচেয়ে গুরুত্বপূর্ণ।', ne: 'डायपर परिवर्तन गर्दा प्रयोगकर्ताको लाज र गोपनीयताको ख्याल राख्नु सबैभन्दा महत्त्वपूर्ण छ।', km: 'ពេលផ្លាស់ប្តូរខោទឹក ការយកចិត្តទុកដាក់ចំពោះការខ្មាស់អៀន និងភាពឯកជនរបស់អ្នកប្រើប្រាស់ គឺសំខាន់បំផុត។' },
-  },
-];
+const CATEGORIES = {
+  basic:     { icon: '🤝', ja: '介護の基本・倫理',     en: 'Basic & Ethics' },
+  body:      { icon: '💪', ja: '身体介護',              en: 'Physical Care' },
+  dementia:  { icon: '🧠', ja: '認知症ケア',            en: 'Dementia Care' },
+  meal:      { icon: '🍱', ja: '食事・栄養',            en: 'Meal & Nutrition' },
+  toilet:    { icon: '🚽', ja: '排泄介助',              en: 'Toilet Care' },
+  bath:      { icon: '🛁', ja: '入浴介助',              en: 'Bathing Care' },
+  emergency: { icon: '🚨', ja: 'ヒヤリハット・緊急時',  en: 'Emergency' },
+  record:    { icon: '📝', ja: '介護記録・申し送り',     en: 'Recording' },
+  kanji:     { icon: '📖', ja: '現場の重要漢字',        en: 'Kanji Practice' },
+  law:       { icon: '⚖️', ja: '介護保険・制度',        en: 'Law & System' },
+};
+
+const DIFFICULTIES = {
+  easy:   { ja: '基礎',   color: 'bg-green-100 text-green-700 border-green-300' },
+  medium: { ja: '標準',   color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
+  hard:   { ja: '上級',   color: 'bg-red-100 text-red-700 border-red-300' },
+};
 
 const ST = {
-  ja: { title: '国家試験対策', desc: '介護福祉士国家試験の練習問題（母国語解説付き）', answer: '答えを見る', next: '次の問題', correct: '✅ 正解！', wrong: '❌ 不正解', explain: '解説', restart: '🔄 もう一度', back: 'トップへ戻る', score: 'スコア', question: '問' },
-  id: { title: 'Latihan Ujian Nasional', desc: 'Soal latihan ujian Kaigo Fukushishi (dengan penjelasan)', answer: 'Lihat Jawaban', next: 'Soal Berikutnya', correct: '✅ Benar!', wrong: '❌ Salah', explain: 'Penjelasan', restart: '🔄 Coba Lagi', back: 'Kembali ke Atas', score: 'Skor', question: 'No' },
-  vi: { title: 'Luyện thi Quốc gia', desc: 'Câu hỏi luyện tập (có giải thích)', answer: 'Xem đáp án', next: 'Câu tiếp theo', correct: '✅ Đúng rồi!', wrong: '❌ Sai rồi', explain: 'Giải thích', restart: '🔄 Thử lại', back: 'Về trang đầu', score: 'Điểm', question: 'Câu' },
-  tl: { title: 'Pagsasanay sa Pambansang Pagsusulit', desc: 'Mga tanong sa pagsusulit (may paliwanag)', answer: 'Tingnan ang Sagot', next: 'Susunod na Tanong', correct: '✅ Tama!', wrong: '❌ Mali', explain: 'Paliwanag', restart: '🔄 Subukan Ulit', back: 'Bumalik sa Itaas', score: 'Marka', question: 'Blg' },
-  my: { title: 'အမျိုးသားစာမေးပွဲ လေ့ကျင့်ရေး', desc: 'Kaigo Fukushishi စာမေးပွဲ လေ့ကျင့်ရေး (ရှင်းလင်းချက်ပါ)', answer: 'အဖြေကြည့်ရန်', next: 'နောက်မေးခွန်း', correct: '✅ မှန်သည်!', wrong: '❌ မှားသည်', explain: 'ရှင်းလင်းချက်', restart: '🔄 ပြန်စရန်', back: 'အပေါ်သို့', score: 'ရမှတ်', question: 'မေး' },
-  bn: { title: 'জাতীয় পরীক্ষার অনুশীলন', desc: 'পরীক্ষার অনুশীলন প্রশ্ন (ব্যাখ্যাসহ)', answer: 'উত্তর দেখুন', next: 'পরবর্তী প্রশ্ন', correct: '✅ সঠিক!', wrong: '❌ ভুল', explain: 'ব্যাখ্যা', restart: '🔄 আবার চেষ্টা', back: 'শীর্ষে ফিরুন', score: 'স্কোর', question: 'প্র' },
-  ne: { title: 'राष्ट्रिय परीक्षा अभ्यास', desc: 'परीक्षा अभ्यास प्रश्नहरू (व्याख्यासहित)', answer: 'उत्तर हेर्नुहोस्', next: 'अर्को प्रश्न', correct: '✅ सही!', wrong: '❌ गलत', explain: 'व्याख्या', restart: '🔄 फेरि प्रयास', back: 'माथि फर्कनुहोस्', score: 'स्कोर', question: 'प्र' },
-  km: { title: 'អនុវត្តប្រឡងជាតិ', desc: 'សំណួរអនុវត្ត (មានការពន្យល់)', answer: 'មើលចម្លើយ', next: 'សំណួរបន្ទាប់', correct: '✅ ត្រឹមត្រូវ!', wrong: '❌ មិនត្រឹមត្រូវ', explain: 'ការពន្យល់', restart: '🔄 សាកម្តងទៀត', back: 'ត្រលប់ទៅដើម', score: 'ពិន្ទុ', question: 'សំណួរ' },
+  ja: { title: '国家試験対策', selectCat: 'カテゴリを選んでください', selectDiff: '難易度', generate: '問題を生成する', generating: 'AI が問題を生成中...', answer: '答えを見る', next: '次の問題', correct: '✅ 正解！', wrong: '❌ 不正解', explain: '解説', tip: '💡 現場のヒント', restart: '別のカテゴリへ', back: 'トップへ戻る', score: 'スコア', total: '問', reading: '読み方', free: '1日3問まで無料', proUnlimited: 'プロプランで無制限' },
+  id: { title: 'Latihan Ujian Nasional', selectCat: 'Pilih kategori', selectDiff: 'Tingkat kesulitan', generate: 'Buat Soal', generating: 'AI sedang membuat soal...', answer: 'Lihat Jawaban', next: 'Soal Berikutnya', correct: '✅ Benar!', wrong: '❌ Salah', explain: 'Penjelasan', tip: '💡 Tips Lapangan', restart: 'Kategori Lain', back: 'Kembali', score: 'Skor', total: 'soal', reading: 'Cara baca', free: '3 soal/hari gratis', proUnlimited: 'Unlimited dengan Pro' },
+  vi: { title: 'Luyện thi Quốc gia', selectCat: 'Chọn danh mục', selectDiff: 'Độ khó', generate: 'Tạo câu hỏi', generating: 'AI đang tạo câu hỏi...', answer: 'Xem đáp án', next: 'Câu tiếp theo', correct: '✅ Đúng!', wrong: '❌ Sai', explain: 'Giải thích', tip: '💡 Mẹo thực tế', restart: 'Danh mục khác', back: 'Về đầu', score: 'Điểm', total: 'câu', reading: 'Cách đọc', free: '3 câu/ngày miễn phí', proUnlimited: 'Không giới hạn với Pro' },
+  tl: { title: 'Pagsasanay sa Pagsusulit', selectCat: 'Pumili ng kategorya', selectDiff: 'Antas ng kahirapan', generate: 'Gumawa ng Tanong', generating: 'Ginagawa ng AI ang tanong...', answer: 'Tingnan ang Sagot', next: 'Susunod na Tanong', correct: '✅ Tama!', wrong: '❌ Mali', explain: 'Paliwanag', tip: '💡 Tips sa Trabaho', restart: 'Ibang Kategorya', back: 'Bumalik', score: 'Marka', total: 'tanong', reading: 'Pagbabasa', free: '3 tanong/araw libre', proUnlimited: 'Walang limitasyon sa Pro' },
+  my: { title: 'စာမေးပွဲ လေ့ကျင့်ရေး', selectCat: 'အမျိုးအစား ရွေးပါ', selectDiff: 'ခက်ခဲမှု', generate: 'မေးခွန်း ဖန်တီးရန်', generating: 'AI မေးခွန်း ဖန်တီးနေသည်...', answer: 'အဖြေ ကြည့်ရန်', next: 'နောက်မေးခွန်း', correct: '✅ မှန်သည်!', wrong: '❌ မှားသည်', explain: 'ရှင်းလင်းချက်', tip: '💡 လက်တွေ့ အကြံ', restart: 'အခြားအမျိုးအစား', back: 'အပေါ်', score: 'ရမှတ်', total: 'မေးခွန်း', reading: 'ဖတ်ပုံ', free: 'တစ်နေ့ ၃ ခုအခမဲ့', proUnlimited: 'Pro ဖြင့် အကန့်အသတ်မရှိ' },
+  bn: { title: 'জাতীয় পরীক্ষার অনুশীলন', selectCat: 'বিভাগ বেছে নিন', selectDiff: 'কঠিনতার স্তর', generate: 'প্রশ্ন তৈরি করুন', generating: 'AI প্রশ্ন তৈরি করছে...', answer: 'উত্তর দেখুন', next: 'পরবর্তী প্রশ্ন', correct: '✅ সঠিক!', wrong: '❌ ভুল', explain: 'ব্যাখ্যা', tip: '💡 মাঠের পরামর্শ', restart: 'অন্য বিভাগ', back: 'ফিরুন', score: 'স্কোর', total: 'প্রশ্ন', reading: 'পড়ার উপায়', free: 'দিনে ৩টি বিনামূল্যে', proUnlimited: 'Pro-তে সীমাহীন' },
+  ne: { title: 'राष्ट्रिय परीक्षा अभ्यास', selectCat: 'श्रेणी छान्नुहोस्', selectDiff: 'कठिनाइ स्तर', generate: 'प्रश्न बनाउनुहोस्', generating: 'AI प्रश्न बनाउँदैछ...', answer: 'उत्तर हेर्नुहोस्', next: 'अर्को प्रश्न', correct: '✅ सही!', wrong: '❌ गलत', explain: 'व्याख्या', tip: '💡 कामको सुझाव', restart: 'अर्को श्रेणी', back: 'फर्कनुहोस्', score: 'स्कोर', total: 'प्रश्न', reading: 'पढ्ने तरिका', free: 'दिनमा ३ वटा निःशुल्क', proUnlimited: 'Pro मा असीमित' },
+  km: { title: 'អនុវត្តប្រឡងជាតិ', selectCat: 'ជ្រើសរើសប្រភេទ', selectDiff: 'កម្រិតពិបាក', generate: 'បង្កើតសំណួរ', generating: 'AI កំពុងបង្កើតសំណួរ...', answer: 'មើលចម្លើយ', next: 'សំណួរបន្ទាប់', correct: '✅ ត្រឹមត្រូវ!', wrong: '❌ មិនត្រឹមត្រូវ', explain: 'ការពន្យល់', tip: '💡 គន្លឹះការងារ', restart: 'ប្រភេទផ្សេង', back: 'ត្រលប់', score: 'ពិន្ទុ', total: 'សំណួរ', reading: 'របៀបអាន', free: '៣សំណួរ/ថ្ងៃឥតគិតថ្លៃ', proUnlimited: 'គ្មានដែនកំណត់ជាមួយ Pro' },
 };
 
 export default function ShikenPage() {
   const router = useRouter();
   const { lang, t } = useLang();
+  const { user } = useUser();
+  const isPro = user?.plan === 'pro' || user?.plan === 'unlimited';
   const st = ST[lang] || ST['ja'];
-  const [current, setCurrent] = useState(0);
+
+  const [phase, setPhase] = useState('select'); // select → loading → question → result
+  const [category, setCategory] = useState(null);
+  const [difficulty, setDifficulty] = useState('medium');
+  const [question, setQuestion] = useState(null);
   const [selected, setSelected] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [score, setScore] = useState(0);
-  const [finished, setFinished] = useState(false);
-  const q = QUESTIONS[current];
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [dailyCount, setDailyCount] = useState(0);
+  const MAX_FREE = isPro ? 99999 : 3;
+
+  const speak = (text) => {
+    if (typeof window === 'undefined') return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    utterance.rate = 0.85;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const generateQuestion = async (cat) => {
+    if (dailyCount >= MAX_FREE) return;
+    setCategory(cat);
+    setPhase('loading');
+    setSelected(null);
+    setShowAnswer(false);
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/shiken', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: cat, lang, difficulty }),
+      });
+      const data = await res.json();
+      setQuestion(data.question);
+      setPhase('question');
+      setDailyCount(c => c + 1);
+    } catch (e) {
+      setPhase('select');
+    }
+    setLoading(false);
+  };
 
   const handleAnswer = () => {
     if (selected === null) return;
-    if (selected === q.answer) setScore(s => s + 1);
+    if (selected === question.answer) setScore(s => s + 1);
+    setTotal(t => t + 1);
     setShowAnswer(true);
   };
 
   const handleNext = () => {
-    if (current + 1 >= QUESTIONS.length) { setFinished(true); }
-    else { setCurrent(c => c + 1); setSelected(null); setShowAnswer(false); }
+    if (dailyCount >= MAX_FREE) {
+      setPhase('limit');
+      return;
+    }
+    generateQuestion(category);
   };
-
-  const handleRestart = () => { setCurrent(0); setSelected(null); setShowAnswer(false); setScore(0); setFinished(false); };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar />
       <main className="max-w-3xl mx-auto px-4 py-8">
         <button onClick={() => router.push('/')} className="mb-6 text-green-600 hover:underline text-sm">← {st.back}</button>
+
+        {/* ヘッダー */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-500 rounded-2xl p-6 text-white mb-6 shadow-lg">
           <h1 className="text-2xl font-bold mb-1">📚 {st.title}</h1>
-          <p className="text-blue-100 text-sm">{st.desc}</p>
-          <div className="mt-2 text-xs text-blue-200">{st.question} {current + 1} / {QUESTIONS.length}　{st.score}：{score}</div>
-          <div className="mt-2 bg-blue-500 rounded-full h-2">
-            <div className="bg-white rounded-full h-2 transition-all" style={{ width: `${((current + 1) / QUESTIONS.length) * 100}%` }} />
+          <p className="text-blue-100 text-sm">AIが毎回新しい問題を生成します・無限に練習できます</p>
+          <div className="mt-3 flex items-center justify-between">
+            <div className="text-xs text-blue-200">
+              {st.score}：{score} / {total}{st.total}
+            </div>
+            <div className="text-xs bg-white/20 rounded-full px-3 py-1">
+              今日：{dailyCount}/{isPro ? '∞' : MAX_FREE} {isPro ? '（プロ・無制限）' : '(' + st.free + ')'}
+            </div>
           </div>
         </div>
 
-        {finished ? (
-          <div className="bg-white rounded-2xl border shadow-sm p-8 text-center">
-            <div className="text-5xl mb-4">{score >= 4 ? '🎉' : '📖'}</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">{score} / {QUESTIONS.length}{st.score === 'スコア' ? '点' : ''}</h2>
-            <p className="text-gray-500 mb-6">{score >= 4 ? '素晴らしい！合格ラインです！' : 'もう少し！復習して再挑戦しましょう！'}</p>
-            <button onClick={handleRestart} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl">{st.restart}</button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border shadow-sm p-6">
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">{q.category}</span>
-              <p className="mt-3 text-gray-800 font-semibold leading-relaxed">{q.question}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {Object.entries(q.furigana).map(([kanji, furi]) => (
-                  <span key={kanji} className="text-xs bg-yellow-50 border border-yellow-200 rounded px-2 py-0.5 text-gray-600">{kanji}（{furi}）</span>
-                ))}
-              </div>
+        {/* カテゴリ選択 */}
+        {phase === 'select' && (
+          <div>
+            <div className="flex gap-2 mb-6 flex-wrap">
+              <p className="text-gray-600 font-semibold w-full">{st.selectCat}</p>
+              <p className="text-xs text-gray-400 w-full">{st.selectDiff}：</p>
+              {Object.entries(DIFFICULTIES).map(([key, d]) => (
+                <button key={key} onClick={() => setDifficulty(key)}
+                  className={`border rounded-full px-3 py-1 text-xs font-bold transition-all ${difficulty === key ? d.color + ' border-2' : 'bg-white text-gray-500 border-gray-200'}`}>
+                  {d.ja}
+                </button>
+              ))}
             </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {Object.entries(CATEGORIES).map(([key, cat]) => (
+                <button key={key} onClick={() => generateQuestion(key)}
+                  disabled={dailyCount >= MAX_FREE}
+                  className="bg-white border border-blue-100 rounded-2xl p-4 text-center hover:shadow-md hover:border-blue-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                  <div className="text-3xl mb-2">{cat.icon}</div>
+                  <p className="font-bold text-gray-800 text-xs">{cat.ja}</p>
+                  <p className="text-xs text-gray-400 mt-1">{cat.en}</p>
+                </button>
+              ))}
+            </div>
+            {dailyCount >= MAX_FREE && !isPro && (
+              <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 text-center">
+                <p className="text-yellow-700 font-bold mb-2">今日の無料枠（{MAX_FREE}問）を使い切りました</p>
+                <p className="text-yellow-600 text-sm mb-3">{st.proUnlimited}</p>
+                <a href="https://buy.stripe.com/3cI6oz52k9VoakZ5sWcs802" target="_blank" rel="noopener noreferrer"
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2 rounded-full text-sm inline-block">
+                  💎 プロプランへ（¥500/月）
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ローディング */}
+        {phase === 'loading' && (
+          <div className="bg-white rounded-2xl border p-12 text-center">
+            <div className="text-5xl mb-4 animate-bounce">🤖</div>
+            <p className="text-gray-500">{st.generating}</p>
+            <p className="text-xs text-gray-400 mt-2">カテゴリ：{category && CATEGORIES[category]?.ja}</p>
+          </div>
+        )}
+
+        {/* 問題表示 */}
+        {phase === 'question' && question && (
+          <div className="space-y-4">
+            {/* カテゴリ・難易度 */}
+            <div className="bg-white rounded-2xl border shadow-sm p-6">
+              <div className="flex gap-2 mb-3 flex-wrap">
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                  {question.category}
+                </span>
+                <span className={`text-xs border px-2 py-1 rounded-full font-medium ${DIFFICULTIES[difficulty]?.color}`}>
+                  {DIFFICULTIES[difficulty]?.ja}
+                </span>
+              </div>
+
+              {/* 問題文 */}
+              <p className="text-gray-800 font-semibold leading-relaxed text-lg mb-3">
+                {question.question}
+              </p>
+
+              {/* 🔊 読み上げボタン */}
+              <button onClick={() => speak(question.question)}
+                className="text-xs text-blue-500 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-50 mb-3">
+                🔊 読み上げる
+              </button>
+
+              {/* ふりがな */}
+              {question.furigana && Object.keys(question.furigana).length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(question.furigana).map(([kanji, furi]) => (
+                    <span key={kanji} className="text-xs bg-yellow-50 border border-yellow-200 rounded-lg px-2 py-1 text-gray-600">
+                      {kanji}（{furi}）
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 選択肢 */}
             <div className="space-y-3">
-              {q.choices.map((choice, idx) => {
+              {question.choices.map((choice, idx) => {
                 let style = 'bg-white border-gray-200 text-gray-700';
                 if (showAnswer) {
-                  if (idx === q.answer) style = 'bg-green-50 border-green-400 text-green-800 font-bold';
-                  else if (idx === selected && idx !== q.answer) style = 'bg-red-50 border-red-400 text-red-700';
+                  if (idx === question.answer) style = 'bg-green-50 border-green-400 text-green-800 font-bold';
+                  else if (idx === selected && idx !== question.answer) style = 'bg-red-50 border-red-400 text-red-700';
                 } else if (idx === selected) style = 'bg-blue-50 border-blue-400 text-blue-800';
                 return (
                   <button key={idx} onClick={() => !showAnswer && setSelected(idx)}
                     className={`w-full text-left border rounded-xl p-4 text-sm transition-all ${style}`}>
                     <span className="font-bold mr-2">{idx + 1}.</span>{choice}
-                    {showAnswer && idx === q.answer && <span className="ml-2">✓</span>}
+                    {showAnswer && idx === question.answer && <span className="ml-2">✓</span>}
                   </button>
                 );
               })}
             </div>
+
             {!showAnswer ? (
               <button onClick={handleAnswer} disabled={selected === null}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl transition-colors">
@@ -138,15 +230,58 @@ export default function ShikenPage() {
               </button>
             ) : (
               <div className="space-y-3">
-                <div className={`rounded-xl p-4 ${selected === q.answer ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                  <p className="font-bold mb-2">{selected === q.answer ? st.correct : st.wrong}</p>
-                  <p className="text-sm font-semibold text-gray-700 mb-1">{st.explain}</p>
-                  <p className="text-sm text-gray-600">{q.explanation[lang] || q.explanation['ja']}</p>
+                {/* 解説 */}
+                <div className={`rounded-2xl p-5 ${selected === question.answer ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                  <p className="font-bold text-lg mb-3">
+                    {selected === question.answer ? st.correct : st.wrong}
+                  </p>
+
+                  {/* 日本語解説 */}
+                  <div className="mb-3">
+                    <p className="text-xs font-bold text-gray-500 mb-1">📖 {st.explain}（日本語）</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{question.explanation?.ja}</p>
+                    <button onClick={() => speak(question.explanation?.ja)}
+                      className="mt-1 text-xs text-blue-500 border border-blue-200 rounded-full px-2 py-0.5 hover:bg-blue-50">
+                      🔊 聞く
+                    </button>
+                  </div>
+
+                  {/* 母国語解説 */}
+                  {question.explanation?.[lang] && lang !== 'ja' && (
+                    <div className="bg-white/60 rounded-xl p-3">
+                      <p className="text-xs font-bold text-gray-500 mb-1">💬 {st.explain}</p>
+                      <p className="text-sm text-gray-700 leading-relaxed">{question.explanation[lang]}</p>
+                    </div>
+                  )}
+
+                  {/* 現場のヒント */}
+                  {question.tip && (
+                    <div className="mt-3 bg-yellow-50 border border-yellow-100 rounded-xl p-3">
+                      <p className="text-xs font-bold text-yellow-700 mb-1">{st.tip}</p>
+                      <p className="text-sm text-gray-700">{question.tip}</p>
+                    </div>
+                  )}
                 </div>
-                <button onClick={handleNext}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
-                  {current + 1 < QUESTIONS.length ? `${st.next} →` : '結果を見る 🎯'}
-                </button>
+
+                {/* 次へボタン */}
+                <div className="flex gap-3">
+                  <button onClick={handleNext}
+                    disabled={dailyCount >= MAX_FREE}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl transition-colors">
+                    {dailyCount >= MAX_FREE ? `今日の上限（${MAX_FREE}問）` : `${st.next} →`}
+                  </button>
+                  <button onClick={() => setPhase('select')}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-xl transition-colors text-sm">
+                    {st.restart}
+                  </button>
+                </div>
+
+                {dailyCount >= MAX_FREE && !isPro && (
+                  <a href="https://buy.stripe.com/3cI6oz52k9VoakZ5sWcs802" target="_blank" rel="noopener noreferrer"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors block text-center">
+                    💎 プロプランで無制限に練習する（¥500/月）
+                  </a>
+                )}
               </div>
             )}
           </div>
