@@ -1,54 +1,28 @@
 import { NextResponse } from 'next/server';
 
-export async function POST(request) {
-  const { category, lang, difficulty } = await request.json();
-
-  const langNames = {
-    ja: '日本語', id: 'インドネシア語', vi: 'ベトナム語',
-    tl: 'フィリピン語', my: 'ミャンマー語', bn: 'ベンガル語',
-    ne: 'ネパール語', km: 'クメール語',
-  };
-
-  const categories = {
-    basic: '介護の基本・倫理・自己決定・尊厳',
-    body: '身体介護・移乗・体位変換・ボディメカニクス',
-    dementia: '認知症ケア・コミュニケーション・BPSD対応',
-    meal: '食事介助・誤嚥予防・栄養・口腔ケア',
-    toilet: '排泄介助・おむつ交換・トイレ誘導',
-    bath: '入浴介助・清拭・皮膚ケア',
-    emergency: 'ヒヤリハット・緊急時対応・報告連絡相談',
-    record: '介護記録・申し送り・ICF',
-    kanji: '介護現場で使う重要漢字・専門用語',
-    law: '介護保険制度・法律・在留資格',
-  };
-
-  const difficultyText = {
-    easy: '基礎レベル（N4-N3程度の日本語）',
-    medium: '中級レベル（N3-N2程度）',
-    hard: '上級レベル・介護福祉士試験本番レベル',
-  };
-
-  const systemPrompt = `あなたは介護福祉士試験対策の専門家です。
-外国人介護士向けに問題を1問作成してください。
-
-カテゴリ：${categories[category] || categories['basic']}
-難易度：${difficultyText[difficulty] || difficultyText['medium']}
-
-以下のJSON形式のみで返答してください（他のテキストは一切含めない）：
-{
-  "category": "カテゴリ名（日本語）",
-  "question": "問題文（日本語）",
-  "furigana": {"重要な漢字": "ふりがな"},
-  "choices": ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
-  "answer": 正解の選択肢番号（0-3の整数）,
-  "explanation": {
-    "ja": "日本語での解説（2-3文）",
-    "${lang}": "${langNames[lang] || '英語'}での解説（2-3文）"
-  },
-  "tip": "現場で使えるワンポイントアドバイス（${langNames[lang] || '英語'}で）"
-}`;
-
+export async function POST(req) {
   try {
+    const { category, categoryLabel, description, difficulty, difficultyLabel } = await req.json();
+
+    const prompt = `あなたは介護福祉士国家試験の問題作成専門家です。
+以下の条件で問題を1問作成してください。
+
+科目：${categoryLabel}
+出題範囲：${description}
+難易度：${difficultyLabel}（${difficulty === 'basic' ? '基本的な知識を問う' : difficulty === 'standard' ? '実務に即した応用問題' : '複合的な判断力を問う難問'}）
+
+必ず以下のJSON形式のみで返してください（他の文字は一切含めないこと）：
+{
+  "question": "問題文（具体的な場面設定を含む）",
+  "choices": ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
+  "answer": 0,
+  "explanation": "正解の解説（なぜ正しいか、他の選択肢がなぜ誤りかを含む）",
+  "point": "この問題で学ぶべき重要ポイント（1〜2文）"
+}
+
+answerは正解の選択肢のインデックス（0〜3）です。
+問題は実際の国家試験に近い形式で、介護の現場を想定した具体的な場面を設定してください。`;
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -58,16 +32,17 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
-        messages: [{ role: 'user', content: systemPrompt }],
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
       }),
     });
 
     const data = await response.json();
     const text = data.content?.[0]?.text || '';
     const clean = text.replace(/```json|```/g, '').trim();
-    const question = JSON.parse(clean);
-    return NextResponse.json({ question });
+    const parsed = JSON.parse(clean);
+
+    return NextResponse.json(parsed);
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: true }, { status: 500 });
