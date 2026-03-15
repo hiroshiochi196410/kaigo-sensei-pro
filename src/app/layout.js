@@ -1,6 +1,7 @@
 import './globals.css';
 import { LangProvider } from '@/lib/LangContext';
 import Footer from '@/components/Footer';
+import LangSelectPopup from '@/components/LangSelectPopup';
 
 export const metadata = {
   title: '介護先生Pro | Kaigo Sensei Pro',
@@ -12,6 +13,7 @@ export default function RootLayout({ children }) {
     <html lang="ja">
       <body>
         <LangProvider>
+          <LangSelectPopup />
           {children}
           <Footer />
         </LangProvider>
