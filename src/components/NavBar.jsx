@@ -21,7 +21,7 @@ export default function NavBar() {
       <div className="flex items-center gap-3">
         <div className="hidden md:flex gap-1">
           {[
-            { label: t.exam, href: '/exam', icon: '📚' },
+            { label: t.exam, href: '/shiken', icon: '📚' },
             { label: t.roleplay, href: '/roleplay', icon: '🤖' },
             { label: t.progress, href: '/progress', icon: '📊' },
           ].map((item) => (
