@@ -6,6 +6,31 @@ import NavBar from '@/components/NavBar';
 import MascotWidget from '@/components/MascotWidget';
 import { EXTRA_TEXT } from '@/locales/languages';
 
+// 合格者・利用者の声（増やしたい時はここに追加するだけ）
+const VOICES = [
+  {
+    name: 'Oen Thearin',
+    country: '🇰🇭',
+    role: '介護福祉士',
+    msg: 'このアプリは私の理念と同じです。アジアの仲間たちを応援したい！',
+    lang: 'ja',
+  },
+  {
+    name: 'Sari W.',
+    country: '🇮🇩',
+    role: '介護士',
+    msg: 'Aplikasi ini sangat membantu! Soal-soalnya mirip ujian asli.',
+    lang: 'id',
+  },
+  {
+    name: 'Nguyen T.',
+    country: '🇻🇳',
+    role: '介護士',
+    msg: 'Tôi luyện tập mỗi ngày và cảm thấy tự tin hơn rất nhiều!',
+    lang: 'vi',
+  },
+];
+
 export default function HomePage() {
   const router = useRouter();
   const { t, lang } = useLang();
@@ -82,6 +107,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
       <NavBar />
+
+      {/* ヒーローセクション */}
       <section className="flex flex-col items-center justify-center py-14 px-6 text-center">
         <div className="flex gap-1 text-3xl mb-5 flex-wrap justify-center">
           {flags.map((f, i) => (
@@ -91,19 +118,63 @@ export default function HomePage() {
         <h1 className="text-4xl md:text-6xl font-extrabold text-green-700 mb-3">{t.appName}</h1>
         <p className="text-xl font-semibold text-gray-600 mb-2">{t.tagline}</p>
         <p className="text-gray-400 mb-8 max-w-lg text-sm">{t.subtitle}</p>
+
+        {/* メインCTAボタン */}
         <button
           onClick={() => router.push('/kiroku')}
           className="bg-green-600 hover:bg-green-700 text-white text-xl font-bold px-12 py-4 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
         >
           🚀 {t.startLearning}
         </button>
+
+        {/* ¥500 目立つボタン */}
+        <div className="mt-6 flex flex-col items-center gap-2">
+          <button
+            onClick={() => router.push('/plan')}
+            className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white text-lg font-extrabold px-10 py-4 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 border-2 border-white"
+            style={{ boxShadow: '0 4px 20px rgba(251,146,60,0.5)' }}
+          >
+            💰 試験合格まで ¥500 ポッキリ！
+          </button>
+          <p className="text-xs text-gray-400">買い切り・月額なし・何回でも使える</p>
+        </div>
+
         <button
           onClick={() => router.push('/plan')}
-          className="mt-4 text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 px-4 py-2 rounded-full hover:bg-yellow-100 transition-colors"
+          className="mt-3 text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 px-4 py-2 rounded-full hover:bg-yellow-100 transition-colors"
         >
           🎟️ クーポンコードをお持ちの方はこちら
         </button>
       </section>
+
+      {/* 合格者・利用者の声 */}
+      <section className="max-w-5xl mx-auto px-4 pb-10">
+        <div className="text-center mb-6">
+          <h2 className="text-lg font-bold text-gray-700">💬 みんなの声</h2>
+          <p className="text-xs text-gray-400 mt-1">一緒に頑張っている仲間がいます</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {VOICES.map((v, i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{v.country}</span>
+                <div>
+                  <p className="font-bold text-sm text-gray-800">{v.name}</p>
+                  <p className="text-xs text-gray-400">{v.role}</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed italic">「{v.msg}」</p>
+            </div>
+          ))}
+        </div>
+
+        {/* 声を追加する導線（将来的に） */}
+        <div className="text-center mt-4">
+          <p className="text-xs text-gray-300">※ 合格したらあなたの声も載せませんか？</p>
+        </div>
+      </section>
+
+      {/* 機能カード */}
       <section className="max-w-5xl mx-auto px-4 pb-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {features.map((f) => (
           <div key={f.href} className={`bg-gradient-to-br ${f.color} border rounded-2xl p-6 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all`}>
