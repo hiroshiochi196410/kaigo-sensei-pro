@@ -236,7 +236,7 @@ export default function SenpaiPage() {
 
             {/* ボタン */}
             <div className="flex gap-2 pb-5">
-              <a href="https://www.facebook.com/oenthearin" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.facebook.com/thearin.oenthearin" target="_blank" rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm text-white shadow-md transition-all hover:shadow-lg hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, #1877f2, #0d6efd)' }}>
                 📘 {t.follow}
