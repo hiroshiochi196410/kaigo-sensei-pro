@@ -9,7 +9,7 @@ import { EXTRA_TEXT } from '@/locales/languages';
 const VALID_COUPONS = ['KAIGO2025', 'FACEBOOK100', 'PARTNER01'];
 
 const GOOGLE_CAL = 'https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1DZzbc2Em4gn-ABTKavXY1dpFHRpO0ynpn8iSeOx_9vRUdr2MDLcRSv_tZHY4aMVy6ceqQGO2L';
-const STRIPE_PRO = 'https://buy.stripe.com/3cI6oz52k9VoakZ5sWcs802';
+const STRIPE_PRO = 'https://buy.stripe.com/6oU9AL9iA8Rk64Jg7Acs803';
 
 export default function PlanPage() {
   const router = useRouter();
