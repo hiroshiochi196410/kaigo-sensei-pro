@@ -30,7 +30,8 @@ export async function POST(req) {
 
     // 感想お礼メール＋クーポン送信
     await resend.emails.send({
-      from: 'support@aipuru-hu.net',
+      from: "onboarding@resend.dev",
+        reply_to: "support@aipuru-hu.net",
       to: email,
       subject: '【介護先生Pro】感想ありがとうございます！来月のクーポンをお届けします🎁',
       html: `
@@ -77,7 +78,8 @@ export async function POST(req) {
 
     // 管理者にも通知
     await resend.emails.send({
-      from: 'support@aipuru-hu.net',
+      from: "onboarding@resend.dev",
+        reply_to: "support@aipuru-hu.net",
       to: 'support@aipuru-hu.net',
       subject: `【感想が届きました】${email}`,
       html: `

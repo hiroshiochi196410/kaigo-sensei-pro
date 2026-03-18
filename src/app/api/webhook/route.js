@@ -24,7 +24,8 @@ export async function POST(req) {
     if (email) {
       // ウェルカムメール送信
       await resend.emails.send({
-        from: 'support@aipuru-hu.net',
+        from: "onboarding@resend.dev",
+        reply_to: "support@aipuru-hu.net",
         to: email,
         subject: '【介護先生Pro】ご購入ありがとうございます！🌸',
         html: `
