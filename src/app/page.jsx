@@ -6,7 +6,6 @@ import NavBar from '@/components/NavBar';
 import MascotWidget from '@/components/MascotWidget';
 import { EXTRA_TEXT } from '@/locales/languages';
 
-// 合格者・利用者の声（増やしたい時はここに追加するだけ）
 const VOICES = [
   {
     name: 'Oen Thearin',
@@ -65,6 +64,15 @@ export default function HomePage() {
       badge: null,
     },
     {
+      icon: '💬',
+      title: '方言聞き取り練習',
+      desc: '関西・広島・東北など全国の方言をAIがリアルタイム生成。ゲーム感覚で習得！',
+      href: '/hougen',
+      color: 'from-teal-50 to-cyan-100 border-teal-200',
+      btn: 'bg-teal-500 hover:bg-teal-600',
+      badge: '🆕',
+    },
+    {
       icon: '📊',
       title: t.progress,
       desc: t.progressDesc,
@@ -92,14 +100,6 @@ export default function HomePage() {
       badge: null,
     },
     {
-     {icon: '💬',
-      title: '方言聞き取り練習',
-      desc: '関西・広島・東北など全国の方言をAIがリアルタイム生成。ゲーム感覚で習得！',
-      href: '/hougen',
-      color: 'from-teal-50 to-cyan-100 border-teal-200',
-      btn: 'bg-teal-500 hover:bg-teal-600',
-      badge: '🆕',
-    },
       icon: '🌸',
       title: '先輩に会いに行く',
       desc: 'カンボジア出身・介護福祉士テーリン先輩からのメッセージ',
@@ -116,7 +116,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
       <NavBar />
 
-      {/* ヒーローセクション */}
       <section className="flex flex-col items-center justify-center py-14 px-6 text-center">
         <div className="flex gap-1 text-3xl mb-5 flex-wrap justify-center">
           {flags.map((f, i) => (
@@ -127,7 +126,6 @@ export default function HomePage() {
         <p className="text-xl font-semibold text-gray-600 mb-2">{t.tagline}</p>
         <p className="text-gray-400 mb-8 max-w-lg text-sm">{t.subtitle}</p>
 
-        {/* メインCTAボタン */}
         <button
           onClick={() => router.push('/kiroku')}
           className="bg-green-600 hover:bg-green-700 text-white text-xl font-bold px-12 py-4 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
@@ -135,7 +133,6 @@ export default function HomePage() {
           🚀 {t.startLearning}
         </button>
 
-        {/* ¥500 目立つボタン */}
         <div className="mt-6 flex flex-col items-center gap-2">
           <button
             onClick={() => router.push('/plan')}
@@ -155,7 +152,6 @@ export default function HomePage() {
         </button>
       </section>
 
-      {/* 合格者・利用者の声 */}
       <section className="max-w-5xl mx-auto px-4 pb-10">
         <div className="text-center mb-6">
           <h2 className="text-lg font-bold text-gray-700">💬 みんなの声</h2>
@@ -175,14 +171,11 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-
-        {/* 声を追加する導線（将来的に） */}
         <div className="text-center mt-4">
           <p className="text-xs text-gray-300">※ 合格したらあなたの声も載せませんか？</p>
         </div>
       </section>
 
-      {/* 機能カード */}
       <section className="max-w-5xl mx-auto px-4 pb-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {features.map((f) => (
           <div key={f.href} className={`bg-gradient-to-br ${f.color} border rounded-2xl p-6 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all`}>
@@ -199,7 +192,6 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* マスコット */}
       <MascotWidget lang={lang} />
     </div>
   );
