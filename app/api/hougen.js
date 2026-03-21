@@ -1,14 +1,12 @@
-const Anthropic = require('@anthropic-ai/sdk');
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+import { NextResponse } from 'next/server';
 
 const REGION_NAMES = {
-  kansai:   '関西弁（大阪・兵庫）',
-  hiroshima:'広島弁',
-  tohoku:   '東北弁（宮城・岩手）',
-  kyushu:   '九州弁（福岡・熊本）',
-  nagoya:   '名古屋弁',
-  okinawa:  '沖縄弁',
+  kansai:    '関西弁（大阪・兵庫）',
+  hiroshima: '広島弁',
+  tohoku:    '東北弁（宮城・岩手）',
+  kyushu:    '九州弁（福岡・熊本）',
+  nagoya:    '名古屋弁',
+  okinawa:   '沖縄弁',
 };
 
 const SCENE_NAMES = {
@@ -21,19 +19,12 @@ const SCENE_NAMES = {
   emergency: '急変・緊急時の場面',
 };
 
-module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export async function POST(request) {
+  const { region = 'kansai', scene = 'meal', level = 1 } = await request.json();
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const { region = 'kansai', scene = 'meal', level = 1 } = req.body || {};
-
-  const regionName  = REGION_NAMES[region]  || REGION_NAMES.kansai;
-  const sceneName   = SCENE_NAMES[scene]    || SCENE_NAMES.meal;
-  const speedNote   = level >= 2
+  const regionName = REGION_NAMES[region] || REGION_NAMES.kansai;
+  const sceneName  = SCENE_NAMES[scene]   || SCENE_NAMES.meal;
+  const speedNote  = level >= 2
     ? '早口・省略多め（申し送りや忙しい場面のイメージ）'
     : 'ゆっくり・わかりやすい方言まじり';
 
@@ -70,25 +61,34 @@ module.exports = async (req, res) => {
 
 注意：
 - choices配列は必ず4つ
-- correct_indexは0〜3の整数（正解が入るインデックス）
-- 正解は配列の0番目に入れてください（表示時にシャッフルします）
+- correct_indexは必ず0（シャッフルはアプリ側でやります）
 - 介護現場で本当に使われる自然な表現にしてください`;
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 800,
-      messages: [{ role: 'user', content: prompt }],
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 800,
+        messages: [{ role: 'user', content: prompt }],
+      }),
     });
 
-    const raw = response.content[0].text.trim();
+    const data = await response.json();
+    const raw = data.content?.[0]?.text || '';
 
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('JSON not found in response');
+    if (!jsonMatch) throw new Error('JSON not found');
 
     const question = JSON.parse(jsonMatch[0]);
 
-    const choices = question.choices || [];
+    // 選択肢をシャッフルして正解インデックスを更新
+    const choices = [...(question.choices || [])];
     const correct = choices[0];
     for (let i = choices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -97,10 +97,10 @@ module.exports = async (req, res) => {
     question.correct_index = choices.indexOf(correct);
     question.choices = choices;
 
-    return res.status(200).json({ success: true, question });
+    return NextResponse.json({ success: true, question });
 
-  } catch (err) {
-    console.error('hougen API error:', err);
-    return res.status(500).json({ success: false, error: err.message });
+  } catch (e) {
+    console.error('hougen API error:', e);
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
-};
+}
