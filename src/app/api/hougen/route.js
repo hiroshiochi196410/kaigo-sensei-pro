@@ -21,14 +21,11 @@ const SCENE_NAMES = {
 
 export async function POST(request) {
   const { region = 'kansai', scene = 'meal', level = 1 } = await request.json();
-
   const regionName = REGION_NAMES[region] || REGION_NAMES.kansai;
-  const sceneName  = SCENE_NAMES[scene]   || SCENE_NAMES.meal;
-  const speedNote  = level >= 2
-    ? '早口・省略多め（申し送りや忙しい場面のイメージ）'
-    : 'ゆっくり・わかりやすい方言まじり';
+  const sceneName = SCENE_NAMES[scene] || SCENE_NAMES.meal;
+  const speedNote = level >= 2 ? '早口・省略多め' : 'ゆっくり・わかりやすい方言まじり';
 
-  const prompt = `あなたは介護現場の日本語学習ゲームの問題作成AIです。以下の条件で問題を1問作ってください。【条件】方言：${regionName}、場面：${sceneName}、速さ：${speedNote}、話者：介護施設のスタッフまたは利用者（高齢者）。必ずJSON形式のみで返してください：{"situation":"場面説明","speaker":"話者名と出身","dialect_text":"方言のセリフ20〜40文字","speed":"${level >= 2 ? 'fast' : 'normal'}","question":"このセリフの意味は何ですか？","choices":["正解（標準語訳）","間違い1","間違い2","間違い3"],"correct_index":0,"hint_ja":"方言の解説（日本語）","hint_id":"Penjelasan Bahasa Indonesia","standard_jp":"標準語訳全文"}。注意：choices必ず4つ、correct_indexは必ず0、介護現場で自然な表現で。`;
+  const prompt = `介護現場の日本語学習ゲームの問題を1問作ってください。方言：${regionName}、場面：${sceneName}、速さ：${speedNote}。必ずJSON形式のみで返してください：{"situation":"場面説明","speaker":"話者名と出身","dialect_text":"方言セリフ20〜40文字","speed":"${level >= 2 ? 'fast' : 'normal'}","question":"このセリフの意味は何ですか？","choices":["正解","間違い1","間違い2","間違い3"],"correct_index":0,"hint_ja":"方言解説","hint_id":"Penjelasan Bahasa Indonesia","standard_jp":"標準語訳"}`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -44,12 +41,10 @@ export async function POST(request) {
         messages: [{ role: 'user', content: prompt }],
       }),
     });
-
     const data = await response.json();
     const raw = data.content?.[0]?.text || '';
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('JSON not found');
-
     const question = JSON.parse(jsonMatch[0]);
     const choices = [...(question.choices || [])];
     const correct = choices[0];
@@ -59,14 +54,8 @@ export async function POST(request) {
     }
     question.correct_index = choices.indexOf(correct);
     question.choices = choices;
-
     return NextResponse.json({ success: true, question });
   } catch (e) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
 }
-```
-
-まずこのURLを開いてください：
-```
-https://github.com/hiroshiochi196410/kaigo-sensei-pro/new/main/src/app/api/hougen
