@@ -92,6 +92,15 @@ export default function HomePage() {
       badge: null,
     },
     {
+     {
+      icon: '🗣️',
+      title: '方言聞き取り練習',
+      desc: '関西・広島・東北など全国の方言をAIがリアルタイム生成。ゲーム感覚で習得！',
+      href: '/hougen',
+      color: 'from-teal-50 to-cyan-100 border-teal-200',
+      btn: 'bg-teal-500 hover:bg-teal-600',
+      badge: '🆕',
+    },
       icon: '🌸',
       title: '先輩に会いに行く',
       desc: 'カンボジア出身・介護福祉士テーリン先輩からのメッセージ',
