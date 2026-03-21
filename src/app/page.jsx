@@ -92,8 +92,7 @@ export default function HomePage() {
       badge: null,
     },
     {
-     {
-      icon: '🗣️',
+     {icon: '💬',
       title: '方言聞き取り練習',
       desc: '関西・広島・東北など全国の方言をAIがリアルタイム生成。ゲーム感覚で習得！',
       href: '/hougen',
